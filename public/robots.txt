@@ -1,0 +1,18 @@
+# robots.txt for Investor's Eye
+User-agent: *
+Allow: /
+
+# امنع الزحف على المسارات الإدارية والداخلية
+Disallow: /admin/login
+Disallow: /admin/login/new
+
+Disallow: /api/
+Disallow: /private/
+Disallow: /drafts/
+
+# Next.js build assets (عادةً ما تُفهرسش)
+Disallow: /_next/
+Disallow: /__nextjs_original-stack-frame/
+
+# الخرائط
+Sitemap: https://investorseye.sy/sitemap.xml
