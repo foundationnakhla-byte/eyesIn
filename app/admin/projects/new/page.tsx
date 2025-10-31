@@ -72,7 +72,7 @@ export default function NewProjectPage() {
     try {
       // لازم تكون مسجّل دخول (وسياساتك تسمح للأدمن فقط)
       const { data: { user } } = await supabaseBrowser.auth.getUser()
-      if (!user) throw new Error('الرجاء تسجيل الدخول كأدمن')
+    //   if (!user) throw new Error('الرجاء تسجيل الدخول كأدمن')
 
       const fd = new FormData(formEl)
 
