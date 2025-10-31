@@ -5,6 +5,7 @@ import localFont from "next/font/local"
 import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
+import ChatWidget from "@/components/ChatWidget"
 
 import { Providers } from "./providers" // يغلّف LanguageProvider داخله
 import ContactNudge from "@/components/ContactNudge"
@@ -38,7 +39,9 @@ export const metadata: Metadata = {
     "شركة عين المستثمر متخصصة في دراسات الجدوى الاقتصادية والدراسات القانونية وتحليل المشاريع في سوريا",
   keywords:
     "دراسات الجدوى, اقتصاد, سوريا, استثمار, مشاريع, تحليل مالي, استشارات, أعمال, شركات, دراسات قانونية",
-  generator: "MULLA-WEB",
+  generator: "MULLA-WEB",  icons: {
+    icon: "/ico.png",
+  },
 }
 
 export default function RootLayout({
@@ -62,6 +65,8 @@ export default function RootLayout({
             contactHref="/contact"
             emoji="👋"
           />
+                  <ChatWidget />
+
         </Providers>
 
         <Analytics />

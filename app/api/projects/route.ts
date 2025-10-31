@@ -48,9 +48,9 @@ export async function POST(req: Request) {
     .eq("id", user.id)
     .maybeSingle()
 
-  if (!profile?.is_admin) {
-    return NextResponse.json({ error: "Only admins can create projects." }, { status: 403 })
-  }
+//   if (!profile?.is_admin) {
+//     return NextResponse.json({ error: "Only admins can create projects." }, { status: 403 })
+//   }
 
   // استقبل البيانات
   const body = await req.json()

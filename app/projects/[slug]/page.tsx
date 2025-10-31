@@ -2,6 +2,8 @@
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { supabaseServer } from "@/lib/supabase/server"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 type Props = {
   params: Promise<{ slug: string }> | { slug: string }
@@ -41,8 +43,9 @@ export default async function ProjectPage({ params }: Props) {
   const title = project.title_ar || project.title_en || project.slug
 
   return (
-    <main className="container mx-auto px-4 py-12" dir="rtl">
-      <h1 className="text-3xl md:text-4xl font-bold mb-6">{title}</h1>
+    <main className="container mx-auto  " dir="rtl">
+      <Header/>
+      <h1 className="text-3xl md:text-4xl font-bold py-10 mb-6">{title}</h1>
 
       <div className="grid md:grid-cols-2 gap-6">
         {project.cover_url && (
@@ -66,18 +69,19 @@ export default async function ProjectPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mt-8">
+      <div className="grid md:grid-cols-2 py-10 gap-6 mt-8">
         {project.image1_url && (
           <div className="relative aspect-[16/10] bg-muted rounded-lg overflow-hidden">
             <Image src={project.image1_url} alt={`${title} - صورة 1`} fill className="object-cover" />
           </div>
         )}
         {project.image2_url && (
-          <div className="relative aspect-[16/10] bg-muted rounded-lg overflow-hidden">
+          <div className="relative aspect-[16/10] bg-muted rounded-lg overflow-hidden ">
             <Image src={project.image2_url} alt={`${title} - صورة 2`} fill className="object-cover" />
           </div>
         )}
       </div>
+      <Footer/>
     </main>
   )
 }

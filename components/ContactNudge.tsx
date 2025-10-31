@@ -58,7 +58,7 @@ export default function ContactNudge({
   const prefersReduced = useReducedMotion();
 
   return (
-    <div className={`fixed z-50 bottom-5 ${isAr ? "rtl:left-5" : "ltr:right-5"}`} dir={isAr ? "rtl" : "ltr"}>
+    <div className={`fixed z-50 bottom-5 ${isAr ? "rtl:right-5" : "ltr:left-5"}`} dir={isAr ? "rtl" : "ltr"}>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <motion.button
