@@ -8,50 +8,37 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 
-/* ------------ Helpers ------------- */
-
-// UUID v4 يعمل حتى بدون HTTPS
-function uuidv4() {
-  const rnd = (n = 16) =>
-    (typeof crypto !== 'undefined' && crypto.getRandomValues)
-      ? crypto.getRandomValues(new Uint8Array(n))
-      : Uint8Array.from({ length: n }, () => Math.floor(Math.random() * 256))
-
-  const bytes = rnd(16)
-  bytes[6] = (bytes[6] & 0x0f) | 0x40 // version
-  bytes[8] = (bytes[8] & 0x3f) | 0x80 // variant
-
-  const hex = [...bytes].map(b => b.toString(16).padStart(2, '0')).join('')
-  return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`
-}
-
 function safeName(s: string) {
   return s.replace(/[^a-zA-Z0-9._-]/g, '_')
 }
 
-async function uploadFileOrThrow(file: File, prefix: string) {
+// يرسل الملف إلى /api/storage/upload (سيرفري)
+async function uploadFileOrThrow(file: File | null, prefix: string) {
   if (!file) throw new Error('الملف مفقود')
   if (file.size === 0) throw new Error('الملف فارغ')
 
-  const ext = file.name.includes('.') ? '.' + file.name.split('.').pop() : ''
-  const name = `${Date.now()}_${uuidv4()}${ext}`
-  const path = `${prefix}/${safeName(name)}` // لا تبدأ بـ /
+  const fd = new FormData()
+  // اسم الملف فقط للتوثيق—المسار النهائي يُجهّز في الـ API
+  fd.append('file', file, safeName(file.name))
+  fd.append('prefix', prefix)
 
-  const { data, error } = await supabaseBrowser.storage
-    .from('projects')
-    .upload(path, file, {
-      upsert: true,
-      contentType: file.type || 'application/octet-stream',
-      cacheControl: '3600',
-    })
+  const res = await fetch('/api/storage/upload', {
+    method: 'POST',
+    body: fd,
+  })
 
-  if (error) throw new Error(`Storage: ${error.message}`)
+  if (!res.ok) {
+    let msg = res.statusText
+    try {
+      const j = await res.json()
+      if (j?.error) msg = j.error
+    } catch {}
+    throw new Error(`Storage: ${msg}`)
+  }
 
-  const { data: pub } = supabaseBrowser.storage.from('projects').getPublicUrl(data.path)
-  return pub.publicUrl
+  const json = await res.json()
+  return json.publicUrl as string
 }
-
-/* ------------ Page ------------- */
 
 export default function NewProjectPage() {
   const formRef = useRef<HTMLFormElement>(null)
@@ -70,28 +57,28 @@ export default function NewProjectPage() {
 
     setLoading(true)
     try {
-      // لازم تكون مسجّل دخول (وسياساتك تسمح للأدمن فقط)
-      const { data: { user } } = await supabaseBrowser.auth.getUser()
-    //   if (!user) throw new Error('الرجاء تسجيل الدخول كأدمن')
+      // تحقّق الجلسة في المتصفّح (تنبيه واضح إذا مو مسجّل)
+      const { data: { user }, error: uErr } = await supabaseBrowser.auth.getUser()
+      if (!user) {
+        console.error('no user session on browser', uErr)
+        throw new Error('الرجاء تسجيل الدخول كأدمن ثم إعادة المحاولة.')
+      }
 
       const fd = new FormData(formEl)
-
       const slug = String(fd.get('slug') || '').trim()
       if (!slug) throw new Error('Slug مطلوب')
 
-      // الملفات
-      const cover = fd.get('cover') as File | null
+      const cover  = fd.get('cover')  as File | null
       const image1 = fd.get('image1') as File | null
       const image2 = fd.get('image2') as File | null
 
-      // رفع الصور بالتوازي
+      // الرفع عبر API السيرفر (Service Role) → لا RLS
       const [coverUrl, image1Url, image2Url] = await Promise.all([
-        uploadFileOrThrow(cover!, 'covers'),
-        uploadFileOrThrow(image1!, 'images'),
-        uploadFileOrThrow(image2!, 'images'),
+        uploadFileOrThrow(cover,  'covers'),
+        uploadFileOrThrow(image1, 'images'),
+        uploadFileOrThrow(image2, 'images'),
       ])
 
-      // البيانات المُرسلة لقاعدة البيانات
       const payload = {
         slug,
         cover_url: coverUrl,
@@ -110,7 +97,6 @@ export default function NewProjectPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-
       if (!res.ok) throw new Error(await res.text())
 
       r.push(`/projects/${slug}`)

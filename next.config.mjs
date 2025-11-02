@@ -5,6 +5,9 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+  }, 
+  experimental: {
+    allowedDevOrigins: ['http://192.168.1.18:3000'],
   },
 }
 

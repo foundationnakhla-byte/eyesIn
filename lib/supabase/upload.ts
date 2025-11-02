@@ -1,4 +1,4 @@
-// upload.ts (client)
+// lib/supabase/upload.ts (client)
 'use client'
 import { supabaseBrowser } from '@/lib/supabase/client'
 

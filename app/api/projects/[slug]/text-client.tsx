@@ -1,3 +1,5 @@
+// app/api/projects/[slug]/text-client.tsx
+
 'use client'
 import { useLanguage } from '@/lib/language-context'
 

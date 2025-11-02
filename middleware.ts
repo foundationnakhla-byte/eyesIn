@@ -1,34 +1,33 @@
-// middleware.ts
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+import { createServerClient } from "@supabase/ssr"
 
-const PROTECTED_PATHS = [/^\/messages($|\/)/, /^\/api\/messages($|\/)/];
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next({ request: { headers: req.headers } })
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  const protectedPath = PROTECTED_PATHS.some((re) => re.test(pathname));
-  if (!protectedPath) return NextResponse.next();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get: (key) => req.cookies.get(key)?.value,
+        set: (key, value, options) => {
+          res.cookies.set({ name: key, value, ...options })
+        },
+        remove: (key, options) => {
+          res.cookies.set({ name: key, value: "", ...options })
+        },
+      },
+    }
+  )
 
-  const auth = req.headers.get("authorization");
-  const user = process.env.ADMIN_USER || "admin";
-  const pass = process.env.ADMIN_PASS || "password";
+  // هذا يسترجع الجلسة ويحدّث الكوكيز تلقائياً عند الحاجة
+  await supabase.auth.getSession()
 
-  if (!auth?.startsWith("Basic ")) {
-    return new NextResponse("Authentication required", {
-      status: 401,
-      headers: { "WWW-Authenticate": 'Basic realm="Restricted"' },
-    });
-  }
-
-  const [u, p] = Buffer.from(auth.split(" ")[1], "base64")
-    .toString()
-    .split(":");
-
-  if (u === user && p === pass) return NextResponse.next();
-
-  return new NextResponse("Unauthorized", { status: 401 });
+  return res
 }
 
 export const config = {
-  matcher: ["/messages/:path*", "/api/messages/:path*"],
-};
+  // مرّر عبر كل المسارات التي قد تحتاج الجلسة (Pages + API + App Router)
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+}
